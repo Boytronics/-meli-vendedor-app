@@ -68,4 +68,5 @@ if url_producto:
         perfil_url = f"https://www.mercadolibre.com.mx/perfil/{nickname}"
         st.success(f"Vendedor encontrado: **{nickname}**")
         st.markdown(f"[🔗 Ver perfil del vendedor]({perfil_url})", unsafe_allow_html=True)
-    else
+    else:
+        st.warning("No se encontró el vendedor.")
