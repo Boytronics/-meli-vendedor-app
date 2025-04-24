@@ -43,4 +43,3 @@ if url_producto:
     else:
         st.warning("No se encontró el vendedor en la página.")
 
-mejora búsqueda de vendedor
