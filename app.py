@@ -22,19 +22,24 @@ def obtener_vendedor(url):
         r.raise_for_status()
         soup = BeautifulSoup(r.text, "html.parser")
 
-        # Opción A: Buscar enlace con /perfil/
+        # A: Buscar href con /perfil/
         vendedor_tag = soup.find("a", href=lambda h: h and "/perfil/" in h)
         if vendedor_tag:
             return vendedor_tag['href'].split("/perfil/")[-1]
 
-        # Opción B: Buscar dentro del div seller-info
+        # B: Buscar por clase CSS usada normalmente
+        vendedor_por_clase = soup.find("a", class_="ui-pdp-seller__link-trigger")
+        if vendedor_por_clase and "/perfil/" in vendedor_por_clase.get("href", ""):
+            return vendedor_por_clase.get("href").split("/perfil/")[-1]
+
+        # C: Buscar dentro del div seller-info
         vendedor_info = soup.find("div", {"id": "seller-info"})
         if vendedor_info:
             link = vendedor_info.find("a")
             if link and "/perfil/" in link.get("href", ""):
                 return link.get("href").split("/perfil/")[-1]
 
-        # Opción C: Extraer desde la URL
+        # D: Extraer desde la URL si todo falla
         return extraer_vendedor_de_url(url)
 
     except Exception as e:
@@ -49,3 +54,4 @@ if url_producto:
         st.markdown(f"[🔗 Ver perfil del vendedor]({perfil_url})", unsafe_allow_html=True)
     else:
         st.warning("No se encontró el vendedor en la página.")
+
