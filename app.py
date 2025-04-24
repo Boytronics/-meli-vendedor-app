@@ -5,21 +5,16 @@ from bs4 import BeautifulSoup
 
 st.set_page_config(page_title="Perfil de Vendedor - Mercado Libre")
 st.title("🔍 Buscar perfil del vendedor en Mercado Libre")
-st.write("Pega la URL del producto o perfil de vendedor para ver sus datos.")
+st.write("Pega la URL del producto y obtén el perfil y datos del vendedor.")
 
-url_entrada = st.text_input("🔗 Ingresa URL de producto o perfil de vendedor")
+url_producto = st.text_input("URL del producto de Mercado Libre")
 
-def extraer_seller_id_desde_url(url):
-    if "_CustId_" in url:
-        match = re.search(r"_CustId_(\d+)", url)
-        return match.group(1) if match else None
-
-    headers = {"User-Agent": "Mozilla/5.0"}
+def obtener_seller_id(url):
     try:
+        headers = {"User-Agent": "Mozilla/5.0"}
         r = requests.get(url, headers=headers, allow_redirects=True)
         r.raise_for_status()
         final_url = r.url
-
         match = re.search(r"/MLM(\d+)", final_url)
         real_id = f"MLM{match.group(1)}" if match else None
 
@@ -28,16 +23,17 @@ def extraer_seller_id_desde_url(url):
             response = requests.get(api_url)
             if response.status_code == 200:
                 data = response.json()
-                return str(data.get("seller_id"))
+                return data.get("seller_id", None)
 
         soup = BeautifulSoup(r.text, "html.parser")
         vendedor_tag = soup.find("a", href=lambda h: h and "/perfil/" in h)
         if vendedor_tag:
             return vendedor_tag['href'].split("/perfil/")[-1]
 
+        return None
     except Exception as e:
-        st.error(f"Error procesando la URL: {e}")
-    return None
+        st.error(f"Error accediendo a la URL: {e}")
+        return None
 
 def obtener_datos_vendedor(seller_id):
     try:
@@ -64,10 +60,9 @@ def obtener_top_productos(seller_id, limit=5):
     except:
         return 0, []
 
-# EJECUCIÓN
-if url_entrada:
-    seller_id = extraer_seller_id_desde_url(url_entrada)
-
+# Ejecución principal
+if url_producto:
+    seller_id = obtener_seller_id(url_producto)
     if seller_id:
         vendedor = obtener_datos_vendedor(seller_id)
         total_publicaciones, top_productos = obtener_top_productos(seller_id)
@@ -105,4 +100,5 @@ if url_entrada:
         else:
             st.info("No se encontraron productos destacados.")
     else:
-        st.warning("No se pudo identificar al vendedor.")
+        st.warning("No se encontró el vendedor.")
+
